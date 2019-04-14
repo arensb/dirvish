@@ -70,6 +70,10 @@ HUMAN_READABLE_DATE=$(date -ud "$DATE" +'%Y-%m-%d')
 
 BANKS=`get_dirvish_option bank`
 RUNALLS=`get_dirvish_option Runall`
+# Get the format of the daily backup directories.
+DIR_DATE_FMT=`get_dirvish_option image-default`
+: ${DIR_DATE_FMT:=%Y%m%d}
+DIR_DATE=$(date -ud "${DATE}" +"${DIR_DATE_FMT}")
 
 BACKUP_PATHS=""
 
@@ -79,7 +83,7 @@ MISSING_BACKUPS=""
 for BANK in $BANKS; do
   for RUNALL in $RUNALLS; do
     CUR_DIR="$BANK/$RUNALL"
-    CUR_BACKUP_DIR=$(ls -d $CUR_DIR/$DATE* 2>/dev/null)
+    CUR_BACKUP_DIR=$(ls -d "$CUR_DIR/${DIR_DATE}"* 2>/dev/null)
     if [ -d "$CUR_DIR" ]; then
       if [ -d "$CUR_BACKUP_DIR" ]; then
         BACKUP_PATHS="$BACKUP_PATHS $CUR_BACKUP_DIR"
