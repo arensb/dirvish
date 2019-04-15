@@ -28,7 +28,7 @@ human_readable_bytes() {
 
 get_dirvish_option() {
   option=$1
-  cat "${MASTER_CONF}" |
+  cat /etc/dirvish/master.conf |
       sed -n '
 	s/^#.*//;	# Strip comments
 	/^\s/{ H; b }	# Indented line: append to hold, and start next cycle
