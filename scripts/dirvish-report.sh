@@ -28,7 +28,29 @@ human_readable_bytes() {
 
 get_dirvish_option() {
   option=$1
-  cat /etc/dirvish/master.conf | sed 's/#.*//g' | sed -n '/'"$option"':/,/^\w/p' | sed -e '/^\w/d' -e '/^$/d' -e 's/[ \t][ \t]*//g' -e 's/[ \t][ \t].*$//g' | tr '\n' ' '
+  cat /etc/dirvish/master.conf |
+      sed -n '
+	s/^#.*//;	# Strip comments
+	/^\s/{ H; b }	# Indented line: append to hold, and start next cycle
+	/^\w/ba		# A word means option assignment. Process it
+	b		# If we get this far, start next cycle.
+	:a		# Label a: we have just seen a word. So now
+			# the holding space contains the previous
+			# "option: value" line, as well as any space-indented
+			# lines that came after that.
+			# Now we need to look at holding space and see
+			# if it has the option we want.
+	x		# Swap hold and pattern
+	/^'"${option}"'/{
+		s/^\(-\|\w\)\+:\s*//	# Remove the option and colon
+		s/\n\+/ /g		# Translate newlines to spaces
+		p			# Print the option value
+		q			# And quit
+	}
+	$ba		# If the option we want is at end of file,
+			# then we just stashed it in holding space. So
+			# swap again, and redo the processing.
+	'
 }
 
 #
@@ -48,6 +70,10 @@ HUMAN_READABLE_DATE=$(date -ud "$DATE" +'%Y-%m-%d')
 
 BANKS=`get_dirvish_option bank`
 RUNALLS=`get_dirvish_option Runall`
+# Get the format of the daily backup directories.
+DIR_DATE_FMT=`get_dirvish_option image-default`
+: ${DIR_DATE_FMT:=%Y%m%d}
+DIR_DATE=$(date -ud "${DATE}" +"${DIR_DATE_FMT}")
 
 BACKUP_PATHS=""
 
@@ -57,7 +83,7 @@ MISSING_BACKUPS=""
 for BANK in $BANKS; do
   for RUNALL in $RUNALLS; do
     CUR_DIR="$BANK/$RUNALL"
-    CUR_BACKUP_DIR=$(ls -d $CUR_DIR/$DATE* 2>/dev/null)
+    CUR_BACKUP_DIR=$(ls -d "$CUR_DIR/${DIR_DATE}"* 2>/dev/null)
     if [ -d "$CUR_DIR" ]; then
       if [ -d "$CUR_BACKUP_DIR" ]; then
         BACKUP_PATHS="$BACKUP_PATHS $CUR_BACKUP_DIR"
