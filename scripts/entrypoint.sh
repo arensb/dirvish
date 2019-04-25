@@ -26,7 +26,7 @@ if [ -z "$CRONTIME" ]; then
 fi
 echo ">> setting crontime to $CRONTIME"
 cat <<EOF > /etc/cron.d/dirvish
-$CRONTIME    root    /bin/bash -c "/etc/dirvish/dirvish-cronjob; . /etc/profile; export MAIL_RECIPIENTS="$MAIL_RECIPIENTS"; /usr/local/bin/dirvish-mailer.sh"
+$CRONTIME    root    /bin/bash -c "/etc/dirvish/dirvish-cronjob; . /etc/profile; export MAIL_RECIPIENTS='$MAIL_RECIPIENTS'; /usr/local/bin/dirvish-mailer.sh"
 EOF
 
 echo ">> start services"
